@@ -1,0 +1,44 @@
+[project]
+name = "point-crop-surface-generator"
+version = "0.1.0"
+description = "Generate one-cell eCLM domain and crop surfdata files from cloud inputs"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "netCDF4>=1.7,<2",
+  "numpy>=1.26,<3",
+  "pyarrow>=17,<22",
+  "shapely>=2.0,<3",
+  "s3fs>=2024.6,<2026",
+  "zarr>=2.18,<3",
+]
+
+[project.scripts]
+point-crop-surface-generator = "point_crop_surface_generator.surface:main"
+eclm-regional-prep = "point_crop_surface_generator.prepare:main"
+eclm-regional-download = "point_crop_surface_generator.download:main"
+
+[tool.uv]
+exclude-newer = "2 weeks"
+
+[dependency-groups]
+test = ["pytest>=8,<9"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/point_crop_surface_generator"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 88
+src = ["src"]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

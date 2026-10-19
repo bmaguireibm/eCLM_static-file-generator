@@ -1,0 +1,22 @@
+# Relative to the CLM input-data root (CSMDATA).
+# These are the raw files required by the documented --hirespft, year-2005,
+# crop-enabled example workflow.
+lnd/clm2/rawdata/mksrf_soitex.10level.c010119.nc
+lnd/clm2/rawdata/mksrf_organic_10level_5x5min_ISRIC-WISE-NCSCD_nlev7_c120830.nc
+lnd/clm2/rawdata/mksrf_LakePnDepth_3x3min_simyr2004_csplk_c151015.nc
+lnd/clm2/rawdata/mksrf_lanwat.050425.nc
+lnd/clm2/rawdata/mksrf_fmax_3x3min_USGS_c120911.nc
+lnd/clm2/rawdata/mksrf_glacier_3x3min_simyr2000.c120926.nc
+lnd/clm2/rawdata/mksrf_GlacierRegion_10x10min_nomask_c170616.nc
+lnd/clm2/rawdata/mksrf_vocef_0.5x0.5_simyr2000.c110531.nc
+lnd/clm2/rawdata/mksrf_topo.10min.c080912.nc
+lnd/clm2/rawdata/mksrf_gdp_0.5x0.5_AVHRR_simyr2000.c130228.nc
+lnd/clm2/rawdata/mksrf_peatf_0.5x0.5_AVHRR_simyr2000.c130228.nc
+lnd/clm2/rawdata/mksf_soilthk_5x5min_ORNL-Soil_simyr1900-2015_c170630.nc
+lnd/clm2/rawdata/mksrf_abm_0.5x0.5_AVHRR_simyr2000.c130201.nc
+lnd/clm2/rawdata/mksrf_urban_0.05x0.05_simyr2000.c120621.nc
+lnd/clm2/rawdata/mksrf_topostats_1km-merge-10min_HYDRO1K-merge-nomask_simyr2000.c130402.nc
+lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_landuse_clm52deg005_histLUH2_2005.c190119.nc
+lnd/clm2/rawdata/pftcftdynharv.0.25x0.25.LUH2.histsimyr1850-2015.c170629/mksrf_landuse_histclm50_LUH2_2005.c170629.nc
+lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_soilcolor_histclm52deg005_earthstatmirca_2005.c190116.nc
+lnd/clm2/rawdata/pftcftdynharv.0.05x0.05.LUH2.histsimyr2005.c190116/mksrf_lai_histclm52deg005_earthstatmirca_2005.c190119.nc

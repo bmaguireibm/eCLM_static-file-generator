@@ -2,5 +2,8 @@
 *.o
 *.mod
 *.nc
+!point_crop_surface_generator/src/point_crop_surface_generator/data/surfdata_template.nc
 *.swp
 docs/_build/*
+.env
+__pycache__/

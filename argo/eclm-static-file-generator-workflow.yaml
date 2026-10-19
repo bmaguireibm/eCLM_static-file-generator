@@ -1,0 +1,84 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: eclm-static-file-generator-
+  labels:
+    app: eclm-static-file-generator
+spec:
+  entrypoint: generate-static-files
+  arguments:
+    parameters:
+      - name: image
+        value: point-crop-surface-generator:latest
+      - name: grid-name
+        value: DE-RuS
+      - name: south-latitude
+        value: "50.860906"
+      - name: north-latitude
+        value: "50.870906"
+      - name: west-longitude
+        value: "6.4421445"
+      - name: east-longitude
+        value: "6.4521445"
+      - name: crop-type
+        value: "21"
+      - name: fertilizer-rate
+        value: "30"
+      - name: cloud-source-uri
+        value: s3://YOUR_BUCKET/eclm/cloud-optimized/
+      - name: surfdata-template
+        value: /opt/eclm-inputdata/surfdata_template.nc
+  templates:
+    - name: generate-static-files
+      outputs:
+        artifacts:
+          - name: static-files
+            path: /work/output
+            s3:
+              key: eclm/static-files/{{workflow.uid}}/static-files.tgz
+      container:
+        image: "{{workflow.parameters.image}}"
+        imagePullPolicy: Always
+        command:
+          - bash
+        args:
+          - -ceu
+          - |
+            cloud_source_uri="{{workflow.parameters.cloud-source-uri}}"
+            surfdata_template="{{workflow.parameters.surfdata-template}}"
+            mkdir -p /work/output
+            find /work/output -maxdepth 1 -type f -name '*.nc' -delete
+
+            surfdata_output="/work/output/surfdata_1x1_{{workflow.parameters.grid-name}}_hist_78pfts_CMIP6_simyr2005_CFT{{workflow.parameters.crop-type}}.nc"
+            domain_output="/work/output/domain.lnd.{{workflow.parameters.grid-name}}.nc"
+            uv run --project /app --no-dev point-crop-surface-generator \
+                --surfdata-template "$surfdata_template" \
+                --south "{{workflow.parameters.south-latitude}}" \
+                --north "{{workflow.parameters.north-latitude}}" \
+                --west "{{workflow.parameters.west-longitude}}" \
+                --east "{{workflow.parameters.east-longitude}}" \
+                --crop-type "{{workflow.parameters.crop-type}}" \
+                --fertilizer-rate "{{workflow.parameters.fertilizer-rate}}" \
+                --cloud-data-root "$cloud_source_uri" \
+                --output-surfdata "$surfdata_output" \
+                --output-domain "$domain_output"
+
+            test -s "$surfdata_output"
+            test -s "$domain_output"
+        env:
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: s3-credentials
+                key: AWS_ACCESS_KEY_ID
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: s3-credentials
+                key: AWS_SECRET_ACCESS_KEY
+        resources:
+          requests:
+            cpu: "2"
+            memory: 4Gi
+          limits:
+            memory: 8Gi

@@ -1,0 +1,104 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: eclm-regional-input-preparation-
+  labels:
+    app: eclm-regional-input-preparation
+spec:
+  entrypoint: prepare-regional-inputs
+  arguments:
+    parameters:
+      - name: image
+        value: point-crop-surface-generator:latest
+      - name: input-cache-key
+        value: eclm/raw-data/csmdata-cache.tgz
+      - name: output-uri
+        value: s3://YOUR_BUCKET/eclm/cloud-optimized/
+      - name: face-chunk-size
+        value: "250000"
+      - name: hydro1k-tile-size
+        value: "1.0"
+      - name: lai-only
+        value: "false"
+      - name: refresh-rawdata
+        value: "true"
+      - name: raw-base-url
+        value: https://svn-ccsm-inputdata.cgd.ucar.edu/trunk/inputdata
+
+  # Keep the large input cache on a PVC rather than node ephemeral storage.
+  # Cloud-optimized output is written directly to S3 and is not declared as an
+  # Argo output artifact.
+  volumeClaimTemplates:
+    - metadata:
+        name: eclm-preparation-workspace
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 250Gi
+
+  templates:
+    - name: prepare-regional-inputs
+      inputs:
+        artifacts:
+          # This is the bootstrap/refresh cache for the cloud-optimized stores.
+          # The cloud static-file workflow itself starts without this
+          # large raw-data archive.
+          - name: csmdata-cache
+            path: /work/inputdata
+            optional: true
+            s3:
+              key: "{{workflow.parameters.input-cache-key}}"
+      container:
+        image: "{{workflow.parameters.image}}"
+        imagePullPolicy: Always
+        volumeMounts:
+          - name: eclm-preparation-workspace
+            mountPath: /work
+        command:
+          - bash
+        args:
+          - -ceu
+          - |
+            prep_args=()
+            download_args=()
+            if [[ "{{workflow.parameters.lai-only}}" == "true" ]]; then
+              prep_args+=(--lai-only)
+              download_args+=(--lai-only)
+            fi
+            if [[ "{{workflow.parameters.refresh-rawdata}}" == "true" ]]; then
+              uv run --no-dev eclm-regional-download \
+                --input-root /work/inputdata \
+                --raw-manifest /opt/eclm-inputdata/rawdata_files.txt \
+                --grid-manifest /opt/eclm-inputdata/clm_mappingfiles.txt \
+                --base-url "{{workflow.parameters.raw-base-url}}" \
+                --log-level INFO \
+                "${download_args[@]}"
+            fi
+            uv run --no-dev eclm-regional-prep \
+              --input-root /work/inputdata \
+              --output-uri "{{workflow.parameters.output-uri}}" \
+              --raw-manifest /opt/eclm-inputdata/rawdata_files.txt \
+              --grid-manifest /opt/eclm-inputdata/clm_mappingfiles.txt \
+              --face-chunk-size "{{workflow.parameters.face-chunk-size}}" \
+              --tile-size "{{workflow.parameters.hydro1k-tile-size}}" \
+              --log-level INFO \
+              "${prep_args[@]}"
+        env:
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: s3-credentials
+                key: AWS_ACCESS_KEY_ID
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: s3-credentials
+                key: AWS_SECRET_ACCESS_KEY
+        resources:
+          requests:
+            cpu: "1"
+            memory: 16Gi
+          limits:
+            memory: 32Gi  
